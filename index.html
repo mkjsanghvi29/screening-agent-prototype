@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Screening Agent prototype: fast yes, accountable no</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("scoutTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font: 14px/1.45 "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+code, pre, .mono { font-family: Consolas, "Courier New", Courier, monospace; }
+a { color: var(--cp-link); }
+header { padding: 16px 24px 0; max-width: 1280px; margin: 0 auto; }
+header h1 { margin: 0; font-size: 20px; }
+header h1 span { color: var(--cp-accent); }
+header p { margin: 4px 0 12px; color: var(--cp-text-muted); max-width: 980px; }
+nav { display: flex; gap: 4px; border-bottom: 1px solid var(--cp-border); max-width: 1280px; margin: 0 auto; padding: 0 24px; flex-wrap: wrap; }
+nav button { border: 0; background: none; padding: 10px 14px; font: inherit; color: var(--cp-text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
+nav button.on { color: var(--cp-accent); border-bottom-color: var(--cp-accent); font-weight: 600; }
+nav button small { display: block; font-size: 11px; font-weight: 400; color: var(--cp-text-soft); }
+main { max-width: 1280px; margin: 0 auto; padding: 16px 24px 40px; }
+.view { display: none; } .view.on { display: block; }
+.card { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14); padding: 16px; }
+.row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.grow { flex: 1; min-width: 320px; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+h3 { font-size: 14px; margin: 14px 0 6px; }
+.muted { color: var(--cp-text-muted); } .soft { color: var(--cp-text-soft); font-size: 12px; }
+.btn { border: 1px solid var(--cp-border-strong); background: var(--cp-surface); color: var(--cp-text); border-radius: 0.625rem; padding: 6px 12px; font: inherit; cursor: pointer; }
+.btn:hover { border-color: var(--cp-accent); }
+.btn.pri { background: var(--cp-accent); border-color: var(--cp-accent); color: var(--cp-accent-fg); }
+.btn.pri:hover { background: var(--cp-accent-hover); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+select, input[type=text] { font: inherit; padding: 6px 8px; border-radius: 0.625rem; border: 1px solid var(--cp-border-strong); background: var(--cp-surface); color: var(--cp-text); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--cp-border); }
+.b-adv { color: var(--cp-success); border-color: var(--cp-success); }
+.b-rev { color: var(--cp-warning); border-color: var(--cp-warning); }
+.b-no { color: var(--cp-danger); border-color: var(--cp-danger); }
+.b-lock { color: var(--cp-text-muted); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--cp-border); vertical-align: top; }
+th { color: var(--cp-text-muted); font-weight: 600; font-size: 12px; }
+tr.sel td { background: var(--cp-highlight); }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--cp-accent-soft); }
+.ok { color: var(--cp-success); font-weight: 600; } .bad { color: var(--cp-danger); font-weight: 600; } .unc { color: var(--cp-warning); font-weight: 600; }
+/* phone */
+.phone { width: 340px; height: 640px; border: 10px solid var(--cp-text); border-radius: 36px; background: var(--cp-surface-soft); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+.ph-top { background: var(--cp-accent); color: var(--cp-accent-fg); padding: 10px 12px; font-size: 13px; }
+.ph-top b { display: block; font-size: 14px; }
+.chat { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.msg { max-width: 85%; padding: 7px 10px; border-radius: 12px; font-size: 13px; white-space: pre-wrap; }
+.msg.bot { background: var(--cp-surface); border: 1px solid var(--cp-border); align-self: flex-start; border-top-left-radius: 2px; }
+.msg.me { background: var(--cp-accent-soft); border: 1px solid var(--cp-highlight); align-self: flex-end; border-top-right-radius: 2px; }
+.msg .t { display: block; font-size: 10px; color: var(--cp-text-soft); text-align: right; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-top: 1px solid var(--cp-border); background: var(--cp-surface); min-height: 50px; }
+.quick button { border: 1px solid var(--cp-accent); color: var(--cp-accent); background: var(--cp-surface); border-radius: 999px; padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.quick button:hover { background: var(--cp-accent-soft); }
+.log { font-size: 12.5px; }
+.log .step { border-left: 3px solid var(--cp-border); padding: 4px 10px; margin: 0 0 6px; }
+.log .step.hot { border-left-color: var(--cp-accent); background: var(--cp-accent-soft); }
+.log .step b { color: var(--cp-accent); }
+pre.json { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 10px; padding: 10px; font-size: 11.5px; overflow: auto; max-height: 340px; margin: 6px 0 0; }
+.callout { border: 1px solid var(--cp-accent); background: var(--cp-accent-soft); border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 13px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.kpi { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 12px; padding: 10px 12px; }
+.kpi b { display: block; font-size: 20px; }
+.kpi span { font-size: 12px; color: var(--cp-text-muted); }
+.bar { height: 14px; border-radius: 4px; background: var(--cp-accent); }
+.bartrack { position: relative; background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 4px; height: 16px; }
+.bartrack .thr { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--cp-text); }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--cp-panel-strong); border: 1px solid var(--cp-accent); color: var(--cp-text); padding: 10px 16px; border-radius: 10px; box-shadow: var(--cp-shadow); display: none; max-width: 560px; z-index: 9; }
+.lint { font-size: 12.5px; margin-top: 6px; }
+.gate { display: flex; gap: 8px; align-items: baseline; font-size: 13px; margin: 3px 0; }
+footer { max-width: 1280px; margin: 0 auto; padding: 0 24px 24px; color: var(--cp-text-soft); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Screening Agent: <span>fast yes, accountable no</span></h1>
+  <p>Prototype for the Darwinbox take-home (D3). The agent answers every frontline applicant within minutes and books strong candidates straight into interviews. A “no” is only ever a published knockout rule the candidate can contest, or a recruiter’s decision. Every step writes a <b>decision receipt</b>.
+  <span class="soft">All data is synthetic. Scoring runs in your browser with deterministic rules; in production an LLM extracts the evidence (D2 R4).</span></p>
+</header>
+
+<nav id="nav">
+  <button data-v="cand" class="on">① Candidate<small>WhatsApp screener</small></button>
+  <button data-v="rec">② Recruiter<small>Review queue</small></button>
+  <button data-v="pol">③ TA admin<small>Criteria &amp; country policy</small></button>
+  <button data-v="aud">④ Auditor<small>Receipts, fairness, backtest</small></button>
+</nav>
+
+<main>
+<!-- ============ CANDIDATE ============ -->
+<section class="view on" id="v-cand">
+  <div class="row" style="margin-bottom:12px; align-items:center">
+    <label>Country&nbsp;<select id="country">
+      <option value="IN">India · Bhiwandi DC</option>
+      <option value="US">United States · Dallas FC</option>
+      <option value="DE">Germany · Leipzig DC</option>
+    </select></label>
+    <button class="btn" id="restart">↺ Restart conversation</button>
+    <span class="soft">Try each route: answer “No” on a must-have, “Not sure” on lifting, or strong answers. Then switch to Germany and repeat.</span>
+  </div>
+  <div class="row">
+    <div class="phone">
+      <div class="ph-top"><b id="ph-role">Warehouse Associate · Night shift</b><span id="ph-site">Hiring assistant · verified business</span></div>
+      <div class="chat" id="chat"></div>
+      <div class="quick" id="quick"></div>
+    </div>
+    <div class="card grow">
+      <h2>Behind the conversation</h2>
+      <p class="muted" style="margin-top:0">What the agent did, which rule fired, and the receipt it wrote. This is what a recruiter or an auditor can see later.</p>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RECRUITER ============ -->
+<section class="view" id="v-rec">
+  <div class="kpis" id="rec-kpis"></div>
+  <div class="row">
+    <div class="card grow" style="flex:1.1">
+      <h2>Review queue <span class="soft">(sorted by likely-yes first · SLA 3 working days)</span></h2>
+      <div style="margin-bottom:8px">
+        <select id="rec-filter">
+          <option value="Review">Review band</option>
+          <option value="DEconfirm">DE knockout confirmations</option>
+          <option value="Advance">Advance band (auto-scheduled)</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+      <table id="rec-table"></table>
+    </div>
+    <div class="card grow" id="rec-card"></div>
+  </div>
+</section>
+
+<!-- ============ POLICY ============ -->
+<section class="view" id="v-pol">
+  <div class="row">
+    <div class="card grow">
+      <h2>Country policy <span class="soft">(enforced server-side · every change logged)</span></h2>
+      <table id="pol-table"></table>
+      <div class="callout" id="gatebox"></div>
+    </div>
+    <div class="card grow">
+      <h2>Approved criteria · Warehouse Associate (v3)</h2>
+      <table id="crit-table"></table>
+      <h3>Propose a new criterion</h3>
+      <div class="row" style="gap:8px">
+        <input type="text" id="crit-in" class="grow" style="min-width:220px" placeholder="e.g. Has a forklift licence">
+        <select id="crit-type"><option>Preferred</option><option>Knockout</option></select>
+        <button class="btn pri" id="crit-add">Check &amp; submit</button>
+      </div>
+      <div class="lint" id="crit-lint"><span class="soft">Try “Candidate under 35”, “Graduate from a top college”, “No employment gaps”, “Lives in pin code 421302”, then “Has a forklift licence”.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AUDITOR ============ -->
+<section class="view" id="v-aud">
+  <div class="row">
+    <div class="card grow" style="flex:1.3">
+      <h2>Decision receipts <span class="soft">(append-only · includes those you created in this session)</span></h2>
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <select id="aud-filter"><option value="all">All actors</option><option value="agent">Agent only</option><option value="human">Human only</option></select>
+        <button class="btn" id="export">⬇ Export receipts (JSON)</button>
+      </div>
+      <div style="max-height:360px;overflow:auto"><table id="aud-table"></table></div>
+      <pre class="json" id="aud-json">Select a receipt to inspect it.</pre>
+    </div>
+    <div class="grow" style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <h2>Adverse-impact ratio by stage <span class="soft">(four-fifths rule · synthetic)</span></h2>
+        <div id="air"></div>
+        <p class="soft">Selection rate of each group ÷ the highest group’s rate. Below 0.80 the rule auto-pauses and the TA admin is alerted (D2 R11). US groups come from voluntary EEO self-ID, which is stored apart from scoring.</p>
+      </div>
+      <div class="card">
+        <h2>Backtest: where last year’s hires would have landed</h2>
+        <div id="bt"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>Prototype by Meet Sanghvi for the Darwinbox PM take-home · synthetic data only · no candidate data is collected or sent anywhere · <a href="ai-trail.html">AI trail →</a></footer>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------------- model ----------------
+const COUNTRY = {
+  IN: { site: "Bhiwandi DC, Maharashtra", role: "Warehouse Associate · Night shift", lang: "English / Hindi", knock: "auto" },
+  US: { site: "Dallas Fulfilment Center, TX", role: "Warehouse Associate · Night shift", lang: "English / Spanish", knock: "auto" },
+  DE: { site: "Logistikzentrum Leipzig", role: "Lagermitarbeiter:in · Nachtschicht", lang: "Deutsch / English", knock: "human" },
+};
+const POLICY = {
+  IN: { ack: "Auto", advance: "Auto-schedule", knock: "auto", rank: "locked", audit: "Internal" },
+  US: { ack: "Auto", advance: "Auto-schedule", knock: "auto", rank: "locked", audit: "Independent (NYC roles)" },
+  DE: { ack: "Auto (after works council)", advance: "Auto-schedule", knock: "human", rank: "locked", audit: "Internal + works council" },
+};
+const GATES = [
+  { k: "G1 backtest: hire recall ≥95% (top hires ≥98%)", ok: true, v: "96.9% / 98.6%" },
+  { k: "G1 adverse-impact ratio ≥0.80 at every stage", ok: true, v: "min 0.86" },
+  { k: "One full peak of live shadow data", ok: false, v: "not yet: first peak" },
+  { k: "Counsel sign-off for rank-based rejection (per country)", ok: false, v: "pending" },
+  { k: "Works-council agreement (DE only)", ok: false, v: "pending" },
+];
+let CRITERIA = [
+  { id: "K1", text: "Right to work in the country", type: "Knockout", w: 0, why: "Legal requirement", by: "TA Lead, 02 Oct" },
+  { id: "K2", text: "Available for night shifts (22:00–06:00)", type: "Knockout", w: 0, why: "Role is night-only", by: "Ops Manager, 02 Oct" },
+  { id: "K3", text: "Can lift 20 kg repeatedly (adjustments available)", type: "Knockout", w: 0, why: "Core task; adjustments considered", by: "H&S Lead, 03 Oct" },
+  { id: "P1", text: "Commute ≤ 15 km", type: "Preferred", w: 25, why: "Night-shift attendance", by: "Ops Manager, 02 Oct" },
+  { id: "P2", text: "Any physical / warehouse / delivery work", type: "Preferred", w: 30, why: "Ramp-up time", by: "Ops Manager, 02 Oct" },
+  { id: "P3", text: "Can start within 2 weeks", type: "Preferred", w: 20, why: "Peak timing", by: "TA Lead, 02 Oct" },
+  { id: "P4", text: "Understands safety briefing language", type: "Preferred", w: 25, why: "Safety", by: "H&S Lead, 03 Oct" },
+];
+const BANNED = [
+  [/\b(age|aged|years old|under \d+|over \d+|young|dob|birth)\b/i, "Age is a protected characteristic. Use the job-related requirement instead (e.g. “can lift 20 kg”)."],
+  [/\b(gender|male|female|man|woman|men|women)\b/i, "Gender must never be a criterion."],
+  [/\b(photo|picture|looks|appearance)\b/i, "Photos and appearance are excluded and redacted before scoring."],
+  [/\b(married|marital|single|children|pregnan)/i, "Family status is protected and not job-related."],
+  [/\b(pin ?code|zip|postcode|postal code|neighbou?rhood)\b/i, "Postcode is a known proxy for caste, race and income. Use computed commute distance (P1) instead."],
+  [/\b(gap|gaps|continuous employment)\b/i, "Employment gaps penalise carers, illness and returners, and do not predict frontline performance."],
+  [/\b(college|university|iit|degree|graduate|tier)\b/i, "Education pedigree is not job-related for this frontline role and creates adverse impact."],
+  [/\b(caste|religion|nationality|ethnic|race|accent|native speaker)\b/i, "Protected characteristic or proxy. For eligibility use “right to work”; for language use “understands safety briefing”."],
+];
+
+const now = () => new Date();
+const ts = (d = now()) => d.toISOString().replace("T", " ").slice(0, 19) + "Z";
+let seq = 4180;
+const rid = () => "DR-2026-" + (++seq);
+
+// ---------------- seed receipts & queue ----------------
+const RECEIPTS = [];
+function receipt(o) {
+  const r = Object.assign({
+    receipt_id: rid(), at: ts(), tenant: "retail-logistics-01", requisition: "REQ-WH-NIGHT-" + (o.country || "IN"),
+    criteria_version: "wh-assoc-v3", model: "evidence-extractor 2026-10 (prompt p-17)", scorer: "det-scorer 1.4",
+  }, o);
+  RECEIPTS.unshift(r); return r;
+}
+const QUEUE = [
+  { id: "C-5521", name: "Ravi K.", country: "IN", band: "Review", score: 65, reason: "Thin CV. Experience inferred from free text: ‘3 yrs Swiggy delivery’.", ev: { K1: "met", K2: "met", K3: "met", P1: ["met", "2 km (computed)"], P2: ["met", "“3 years food delivery, night slots”"], P3: ["partial", "“after Diwali”"], P4: ["unclear", "Answered in Marathi"] }, note: "Backtest twin: the objecting hiring manager’s best 2025 hire had this profile. A CV ranker put him in the bottom 30%; the structured screener puts him in Review, not Not matched." },
+  { id: "C-5519", name: "Sneha P.", country: "IN", band: "Review", score: 55, reason: "Score 55 (Advance ≥70).", ev: { K1: "met", K2: "met", K3: "met", P1: ["partial", "18 km (computed)"], P2: ["unmet", "Retail cashier, no physical work stated"], P3: ["met", "Immediately"], P4: ["met", "Hindi, English"] } },
+  { id: "C-5502", name: "Jordan T.", country: "US", band: "Review", score: 62, reason: "Knockout K3 unclear: ‘Not sure about lifting’.", ev: { K1: "met", K2: "met", K3: "unclear", P1: ["met", "6 mi"], P2: ["met", "“2 yrs Walmart stocking”"], P3: ["met", "Immediately"], P4: ["met", "English"] } },
+  { id: "C-5498", name: "Maria G.", country: "US", band: "Review", score: 45, reason: "Score 45 (Advance ≥70).", ev: { K1: "met", K2: "met", K3: "met", P1: ["unmet", "24 mi"], P2: ["partial", "Home care aide (physical)"], P3: ["unmet", "1 month+"], P4: ["met", "Spanish, English"] } },
+  { id: "C-5490", name: "Lukas W.", country: "DE", band: "Not matched", deConfirm: true, score: 0, reason: "Knockout K2: ‘no night shifts’. Awaiting human confirmation (DE policy).", ev: { K1: "met", K2: "unmet", K3: "met", P1: ["met", "4 km"], P2: ["met", "“Kommissionierer, 1 Jahr”"], P3: ["met", "Sofort"], P4: ["met", "Deutsch"] } },
+  { id: "C-5487", name: "Aylin D.", country: "DE", band: "Not matched", deConfirm: true, score: 0, reason: "Knockout K1: no right to work stated. Awaiting human confirmation (DE policy).", ev: { K1: "unmet", K2: "met", K3: "met", P1: ["met", "9 km"], P2: ["unmet", "—"], P3: ["met", "2 Wochen"], P4: ["met", "Deutsch, Türkisch"] } },
+  { id: "C-5530", name: "Amit S.", country: "IN", band: "Advance", score: 100, reason: "All knockouts met; score 100. Interview booked Tue 10:00.", ev: { K1: "met", K2: "met", K3: "met", P1: ["met", "3 km"], P2: ["met", "“Flipkart picker 2 yrs”"], P3: ["met", "Immediately"], P4: ["met", "Hindi"] } },
+  { id: "C-5528", name: "Dana R.", country: "US", band: "Advance", score: 80, reason: "Score 80. Interview booked Wed 09:30.", ev: { K1: "met", K2: "met", K3: "met", P1: ["met", "4 mi"], P2: ["met", "“Amazon seasonal 2025”"], P3: ["unmet", "1 month"], P4: ["met", "English"] } },
+];
+QUEUE.forEach((c, i) => {
+  receipt({ at: ts(new Date(Date.now() - (i + 1) * 3.7e6)), candidate: c.id, country: c.country, requisition: "REQ-WH-NIGHT-" + c.country,
+    actor: "agent", action: c.band === "Advance" ? "advance+schedule" : c.deConfirm ? "knockout→pending human confirm" : "route→review",
+    band: c.band, score: c.score, evidence: c.ev, policy: `${c.country}.knockout=${POLICY[c.country].knock}`, messages: ["ack+AI notice", c.band === "Advance" ? "interview slots" : "status: under review"] });
+});
+// historical aggregate receipts for realism
+[["C-5411","IN","agent","knockout→auto-close (K2)","Not matched"],["C-5405","IN","recruiter:a.mehta","not progressed (reason: commute 40km, declined relocation)","Review"],["C-5399","US","recruiter:j.ortiz","advanced after review (override)","Review"],["C-5390","IN","recruiter:a.mehta","candidate review request → re-opened, advanced","Not matched"]]
+  .forEach(([c, co, a, act, b], i) => receipt({ at: ts(new Date(Date.now() - 864e5 * (i + 1))), candidate: c, country: co, requisition: "REQ-WH-NIGHT-" + co, actor: a, action: act, band: b }));
+
+// ---------------- helpers ----------------
+const $ = s => document.querySelector(s);
+const el = (t, a = {}, h = "") => { const e = document.createElement(t); Object.assign(e, a); if (h) e.innerHTML = h; return e; };
+const bandPill = b => `<span class="pill ${b === "Advance" ? "b-adv" : b === "Review" ? "b-rev" : "b-no"}">${b}</span>`;
+const evCls = v => v === "met" ? "ok" : v === "unmet" ? "bad" : "unc";
+function toast(t) { const x = $("#toast"); x.innerHTML = t; x.style.display = "block"; clearTimeout(x._t); x._t = setTimeout(() => x.style.display = "none", 4200); }
+
+// ---------------- tabs ----------------
+document.querySelectorAll("#nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + b.dataset.v));
+  if (b.dataset.v === "rec") renderRec(); if (b.dataset.v === "aud") renderAud(); if (b.dataset.v === "pol") renderPol();
+});
+
+// ---------------- candidate chat ----------------
+const Q = [
+  { k: "K1", q: c => `Are you legally allowed to work in ${c === "IN" ? "India" : c === "US" ? "the United States" : "Germany"}?`, opts: [["Yes", "met"], ["No", "unmet"]] },
+  { k: "K2", q: () => "This role is night shifts only (22:00–06:00). Can you work nights?", opts: [["Yes, nights are fine", "met"], ["No", "unmet"]] },
+  { k: "K3", q: () => "The job involves lifting boxes up to 20 kg many times a shift. We can discuss adjustments. Is that OK?", opts: [["Yes", "met"], ["Not sure", "unclear"], ["No", "unmet"]] },
+  { k: "P1", q: () => "Roughly how far do you live from the site?", opts: [["Under 5 km", "met"], ["5–15 km", "met"], ["15–30 km", "partial"], ["30+ km", "unmet"]] },
+  { k: "P2", q: () => "Have you done any physical work before, e.g. warehouse, delivery, construction or retail stock?", opts: [["Yes, 1+ year", "met"], ["A little", "partial"], ["Not yet", "unmet"]], free: true },
+  { k: "P3", q: () => "When could you start?", opts: [["Immediately", "met"], ["Within 2 weeks", "met"], ["In a month or more", "unmet"]] },
+  { k: "P4", q: c => `Safety briefings are in ${COUNTRY[c].lang}. Can you follow them?`, opts: [["Yes", "met"], ["Partly", "partial"], ["No", "unmet"]] },
+];
+let S;
+function addMsg(who, text) {
+  const m = el("div", { className: "msg " + who }); m.textContent = text;
+  m.appendChild(el("span", { className: "t" }, now().toTimeString().slice(0, 5) + (who === "me" ? " ✓✓" : "")));
+  $("#chat").appendChild(m); $("#chat").scrollTop = 1e6;
+}
+function addLog(html, hot) { const d = el("div", { className: "step" + (hot ? " hot" : "") }, html); $("#log").appendChild(d); d.scrollIntoView({ block: "nearest" }); }
+function quick(opts) { const q = $("#quick"); q.innerHTML = ""; opts.forEach(([label, fn]) => { const b = el("button", {}, label); b.onclick = () => fn(label); q.appendChild(b); }); }
+function bot(text, opts, delay = 450) { quick([]); setTimeout(() => { addMsg("bot", text); if (opts) quick(opts); }, delay); }
+
+function startChat() {
+  const c = $("#country").value; S = { c, ans: {}, i: 0, id: "C-" + (5600 + Math.floor(Math.random() * 300)) };
+  $("#chat").innerHTML = ""; $("#log").innerHTML = ""; $("#ph-role").textContent = COUNTRY[c].role; $("#ph-site").textContent = COUNTRY[c].site + " · hiring assistant";
+  addMsg("me", "Hi, I applied for the night-shift warehouse job");
+  addLog(`<b>Application received</b> via WhatsApp click-to-chat link on the job board · candidate <span class="mono">${S.id}</span> · channel opt-in stored.`);
+  bot(`Hi! Thanks for applying 👋 I'm the hiring assistant for ${COUNTRY[c].site}.\n\nI'll ask 7 quick questions (about 2 min).\n\nℹ️ An AI system helps sort applications. A person makes any decision not to move you forward on a judgement call, and you can always ask a person to review. Privacy notice: dbx.link/privacy`,
+    [["Start", () => { addMsg("me", "Start"); addLog(`<b>Notice served</b> · AI-use + privacy notice v2 (${c}) · logged to receipt · time to first response: <b>&lt; 1 min</b> (baseline: 9 days)`, true); ask(); }],
+     ["Talk to a person", () => { addMsg("me", "Talk to a person"); addLog("<b>Human route requested</b> · recruiter task created, SLA 1 working day. Candidate is not screened by AI."); bot("Sure. A recruiter will message you here within 1 working day. Your application is safe."); }]], 300);
+}
+function ask() {
+  const q = Q[S.i]; const opts = q.opts.map(([l, v]) => [l, () => answer(q, l, v)]);
+  bot(q.q(S.c), opts);
+}
+function answer(q, label, v) {
+  addMsg("me", label); S.ans[q.k] = [v, label];
+  const isK = q.k.startsWith("K");
+  addLog(`<b>${q.k}</b> ${CRITERIA.find(x => x.id === q.k).text} → <span class="${evCls(v === "partial" ? "unclear" : v)}">${v}</span> <span class="soft">· source: “${label}”</span>`);
+  S.i++;
+  if (S.i < Q.length) return ask();
+  decide();
+}
+function decide() {
+  const c = S.c, a = S.ans;
+  const kn = ["K1", "K2", "K3"];
+  const failed = kn.filter(k => a[k][0] === "unmet"), unclear = kn.filter(k => a[k][0] === "unclear");
+  let score = 0; const parts = [];
+  ["P1", "P2", "P3", "P4"].forEach(k => { const w = CRITERIA.find(x => x.id === k).w; const v = a[k][0]; const s = v === "met" ? w : v === "partial" ? w / 2 : 0; score += s; parts.push(`${k} ${s}/${w}`); });
+  let band = failed.length ? "Not matched" : unclear.length ? "Review" : score >= 70 ? "Advance" : "Review";
+  addLog(`<b>Deterministic score</b> ${score}/100 (${parts.join(" · ")}) · thresholds: Advance ≥70 · knockouts: ${failed.length ? failed.join(",") + " not met" : unclear.length ? unclear.join(",") + " unclear" : "all met"}`);
+  const ev = {}; Object.entries(a).forEach(([k, [v, l]]) => ev[k] = { value: v, source: l });
+  const base = { candidate: S.id, country: c, requisition: "REQ-WH-NIGHT-" + c, band, score, evidence: ev, policy: `${c}.knockout=${POLICY[c].knock}; rank_reject=locked` };
+  const q = { id: S.id, name: "You (demo)", country: c, band, score, ev: Object.fromEntries(Object.entries(a).map(([k, [v, l]]) => [k, k.startsWith("K") ? v : [v, l]])), reason: "" };
+
+  if (band === "Advance") {
+    addLog(`<b>Policy ${c}</b>: auto-advance allowed → <b>Advance</b>. Calendar sync: 3 free slots in the next 48h.`, true);
+    bot("Great news, you match what this role needs ✅\n\nPick an interview slot at the site (20 min):", [
+      ["Tomorrow 10:00", book], ["Tomorrow 15:30", book], ["Day after 11:00", book]]);
+    function book(l) { addMsg("me", l); const r = receipt(Object.assign(base, { actor: "agent", action: "advance+schedule (" + l + ")", messages: ["ack+AI notice", "slots", "confirmation + reminder T-24h/T-2h"] }));
+      addLog(`<b>Interview booked</b> · apply→interview booked: <b>~4 min</b> (target ≤48h) · receipt <span class="mono">${r.receipt_id}</span><pre class="json">${JSON.stringify(r, null, 2)}</pre>`, true);
+      bot(`Booked: ${l} ✅\nAddress & what to bring: dbx.link/visit\nWe'll remind you the day before. Reply RESCHEDULE anytime.`); q.reason = "Booked " + l; QUEUE.unshift(q); }
+  } else if (band === "Review") {
+    const why = unclear.length ? `Knockout ${unclear.join(",")} is unclear, so the agent may not decide` : `Score ${score} is below Advance (70), and the policy forbids rank-based rejection`;
+    q.reason = why + "."; QUEUE.unshift(q);
+    const r = receipt(Object.assign(base, { actor: "agent", action: "route→review", messages: ["ack+AI notice", "status: under review, decision by +3 working days"] }));
+    addLog(`<b>Policy ${c}</b>: ${why} → <b>Review queue</b> (sorted likely-yes first). Receipt <span class="mono">${r.receipt_id}</span>. <i>Open the Recruiter tab to decide.</i>`, true);
+    bot("Thanks, that's everything 🙏\n\nA recruiter will look at your answers personally and reply here by Thursday at the latest.\n\nMeanwhile, 2 similar roles near you are open (day shift).", [["See similar roles", l => { addMsg("me", l); bot("• Picker, day shift · 4 km\n• Loader, evening · 7 km\nReply 1 or 2 to apply with the same answers."); }]]);
+  } else {
+    const crit = failed.map(k => CRITERIA.find(x => x.id === k).text.toLowerCase()).join("; ");
+    if (POLICY[c].knock === "auto") {
+      const r = receipt(Object.assign(base, { actor: "agent", action: `knockout→auto-close (${failed.join(",")})`, messages: ["ack+AI notice", "outcome with reason + review link"] }));
+      addLog(`<b>Policy ${c}</b>: knockout auto-close allowed. The rule is published, customer-approved and contestable → closed with reason. Receipt <span class="mono">${r.receipt_id}</span>`, true);
+      bot(`Thank you for your time. This role requires: ${crit}. Based on your answer, we can't move this application forward.\n\nThis was decided by a published rule for this job, not a judgement about you.`, [
+        ["Ask a person to review", reviewReq], ["I answered wrong", l => { addMsg("me", l); addLog("<b>Answer correction</b> · the candidate can re-answer once and the decision is recomputed. Logged."); S.i = 0; S.ans = {}; ask(); }], ["Show other roles", l => { addMsg("me", l); bot("• Picker, day shift · 4 km\n• Packer, part-time days · 6 km"); }], ["Why? / my data", l => { addMsg("me", l); bot(`Decision: closed on rule ${failed.join(",")} (${crit}).\nYour answers + this decision record (${r.receipt_id}) can be downloaded: dbx.link/mydata\nYou can ask us to delete your data anytime.`); }]]);
+      function reviewReq(l) { addMsg("me", l); receipt({ candidate: S.id, country: c, actor: "candidate", action: "requested human review", band }); q.band = "Review"; q.reason = "Candidate requested human review of knockout " + failed.join(","); QUEUE.unshift(q);
+        addLog("<b>Human review requested</b> → recruiter queue, SLA 5 working days. <i>See Recruiter tab.</i>", true); bot("Done. A recruiter will review your application personally and reply here within 5 working days."); }
+    } else {
+      q.deConfirm = true; q.reason = `Knockout ${failed.join(",")} not met. Awaiting human confirmation (DE policy).`; QUEUE.unshift(q);
+      const r = receipt(Object.assign(base, { actor: "agent", action: "knockout→pending human confirm", messages: ["ack+AI notice", "status: under review"] }));
+      addLog(`<b>Policy DE</b>: no solely automated adverse decision (GDPR Art. 22 working assumption; works council pending) → <b>human confirmation queue</b>. Receipt <span class="mono">${r.receipt_id}</span>. <i>Recruiter tab → “DE knockout confirmations”.</i>`, true);
+      bot("Vielen Dank! Thanks, that's everything.\n\nA member of our recruiting team will look at your application and reply here within 3 working days.");
+    }
+  }
+}
+$("#restart").onclick = startChat; $("#country").onchange = startChat;
+
+// ---------------- recruiter ----------------
+let selRec = null;
+function renderRec() {
+  const f = $("#rec-filter").value;
+  const list = QUEUE.filter(c => f === "all" ? true : f === "DEconfirm" ? c.deConfirm && !c.done : f === "Review" ? c.band === "Review" && !c.done : c.band === f)
+    .sort((a, b) => b.score - a.score);
+  const rev = QUEUE.filter(c => c.band === "Review" && !c.done).length, dec = QUEUE.filter(c => c.deConfirm && !c.done).length;
+  const hum = RECEIPTS.filter(r => r.actor && r.actor.startsWith("recruiter")).length;
+  $("#rec-kpis").innerHTML = `<div class="kpi"><b>${rev}</b><span>in Review (demo sample of ~8.8k/week at peak)</span></div><div class="kpi"><b>${dec}</b><span>DE knockout confirmations</span></div><div class="kpi"><b>~40 s</b><span>median time per evidence card (vs 3 min raw)</span></div><div class="kpi"><b>${hum}</b><span>human decisions logged</span></div><div class="kpi"><b>2%</b><span>auto-outcomes blind-injected for audit</span></div>`;
+  const t = $("#rec-table"); t.innerHTML = "<tr><th>Candidate</th><th>Country</th><th>Band</th><th>Score</th><th>Why here</th></tr>";
+  list.forEach(c => { const tr = el("tr", { className: "click" + (selRec === c ? " sel" : "") }, `<td>${c.name}<br><span class="soft mono">${c.id}</span></td><td>${c.country}</td><td>${bandPill(c.band)}${c.done ? ' <span class="soft">· decided</span>' : ""}</td><td>${c.score}</td><td class="soft">${c.reason}</td>`); tr.onclick = () => { selRec = c; renderRec(); }; t.appendChild(tr); });
+  if (!list.length) t.innerHTML += `<tr><td colspan="5" class="soft">Queue empty. Run the Candidate flow to add someone.</td></tr>`;
+  renderCard();
+}
+function renderCard() {
+  const c = selRec, box = $("#rec-card");
+  if (!c) { box.innerHTML = `<h2>Evidence card</h2><p class="muted">Select a candidate. The recruiter sees evidence per criterion with the source quote, never a bare “AI score”.</p><div class="callout"><b>Design choices</b><br>• Sorted likely-yes first, so the best Review candidates still hear back fast.<br>• “Not progress” requires a reason code, which becomes the candidate’s explanation.<br>• A card decided in under 8s is flagged as a possible rubber stamp.</div>`; return; }
+  const rows = CRITERIA.map(k => { const e = c.ev[k.id]; const v = Array.isArray(e) ? e[0] : e; const src = Array.isArray(e) ? e[1] : ""; return `<tr><td><b>${k.id}</b> ${k.text}<br><span class="soft">${k.type}${k.w ? " · weight " + k.w : ""}</span></td><td class="${evCls(v === "partial" ? "unclear" : v)}">${v || "—"}</td><td class="soft">${src}</td></tr>`; }).join("");
+  box.innerHTML = `<h2>${c.name} <span class="soft mono">${c.id} · ${c.country}</span> ${bandPill(c.band)}</h2>
+   <p class="muted" style="margin:0 0 6px">${c.reason}</p>
+   ${c.note ? `<div class="callout">🔎 ${c.note}</div>` : ""}
+   <table><tr><th>Criterion</th><th>Evidence</th><th>Source</th></tr>${rows}</table>
+   <p class="soft">Redacted before scoring: name, photo, gender, date of birth, address (commute computed separately).</p>
+   ${c.done ? `<p><b>Decided:</b> ${c.done}</p>` : c.band === "Advance" ? `<p class="soft">Auto-scheduled by the agent. Recruiters can still pull back with a reason.</p>` : `
+   <div class="row" style="gap:8px;align-items:center">
+     <button class="btn pri" id="a-adv">Advance → send slots</button>
+     <button class="btn" id="a-ask">Ask 1 question on WhatsApp</button>
+     <select id="a-reason"><option value="">Not progress: choose reason…</option>${c.deConfirm ? '<option>Confirm knockout as stated by candidate</option>' : ""}<option>Commute too far for night shift</option><option>Start date beyond requisition need</option><option>Role filled: kept in talent pool</option><option>Other job-related reason (free text, audited)</option></select>
+     <button class="btn" id="a-no">Not progress</button>
+   </div>`}`;
+  if (c.done || c.band === "Advance") return;
+  const t0 = Date.now();
+  const act = (action, band, msg) => {
+    const secs = Math.round((Date.now() - t0) / 1000);
+    const r = receipt({ candidate: c.id, country: c.country, requisition: "REQ-WH-NIGHT-" + c.country, actor: "recruiter:a.mehta", action, band: c.band, final: band, review_seconds: secs, rubber_stamp_flag: secs < 8, override_of_agent: band === "Advance" });
+    c.done = action; toast(`Receipt <span class="mono">${r.receipt_id}</span> written · ${msg}${secs < 8 ? ` · ⚠ reviewed in ${secs}s, flagged as possible rubber stamp` : ""}`); renderRec();
+  };
+  $("#a-adv").onclick = () => act("advanced after review (override of agent band)", "Advance", "candidate gets interview slots on WhatsApp");
+  $("#a-ask").onclick = () => toast("WhatsApp question sent: “Could you tell us more about your past work?” The card returns to the queue when they reply.");
+  $("#a-no").onclick = () => { const r = $("#a-reason").value; if (!r) return toast("A reason code is required. It becomes the candidate’s explanation."); act("not progressed: " + r, "Not matched", "candidate receives the reason + ‘ask a person to review’"); };
+}
+$("#rec-filter").onchange = () => { selRec = null; renderRec(); };
+
+// ---------------- policy ----------------
+function renderPol() {
+  const P = POLICY, rows = [
+    ["Acknowledge + AI-use notice + screener", c => P[c].ack],
+    ["Auto-advance & schedule interviews", c => P[c].advance],
+    ["Knockout outcome", c => `<select data-c="${c}" class="knock"><option value="auto" ${P[c].knock === "auto" ? "selected" : ""}>Auto-close (contestable)</option><option value="human" ${P[c].knock === "human" ? "selected" : ""}>Human confirms</option></select>`],
+    ["Rank-based auto-reject", c => `<button class="btn unlock" data-c="${c}">🔒 Locked · request unlock</button>`],
+    ["Bias audit before go-live", c => P[c].audit],
+  ];
+  $("#pol-table").innerHTML = `<tr><th>Capability</th><th>India</th><th>United States</th><th>Germany</th></tr>` + rows.map(([n, f]) => `<tr><td>${n}</td>${["IN", "US", "DE"].map(c => `<td>${f(c)}</td>`).join("")}</tr>`).join("");
+  document.querySelectorAll(".knock").forEach(s => s.onchange = () => {
+    const c = s.dataset.c;
+    if (c === "DE" && s.value === "auto") { s.value = "human"; return toast("Blocked: DE knockout auto-close needs counsel sign-off (GDPR Art. 22) and works-council agreement on file."); }
+    receipt({ actor: "ta-admin:r.iyer", action: `policy change ${c}.knockout: ${P[c].knock} → ${s.value}`, country: c, approver: "TA Lead", requisition: "*" });
+    P[c].knock = s.value; toast(`Policy changed and logged. ${c} knockouts now: ${s.value === "auto" ? "auto-close" : "human confirms"}.`);
+  });
+  document.querySelectorAll(".unlock").forEach(b => b.onclick = () => {
+    receipt({ actor: "ta-admin:r.iyer", action: `unlock request ${b.dataset.c}.rank_reject: DENIED (gates pending)`, country: b.dataset.c, requisition: "*" });
+    toast("Unlock denied: 3 of 5 gates are still pending (see checklist). The request was logged for the auditor.");
+  });
+  $("#gatebox").innerHTML = `<b>Gates to unlock rank-based auto-reject</b> (per country × role family)` + GATES.map(g => `<div class="gate"><span class="${g.ok ? "ok" : "bad"}">${g.ok ? "✔" : "✖"}</span><span>${g.k}</span><span class="soft">${g.v}</span></div>`).join("") + `<div class="soft" style="margin-top:6px">The product is built so that the competitor’s fully automated mode is a configuration a customer can <i>earn</i> with its own data, not a default.</div>`;
+  $("#crit-table").innerHTML = `<tr><th>ID</th><th>Criterion</th><th>Type</th><th>Weight</th><th>Rationale · approver</th></tr>` + CRITERIA.map(k => `<tr><td>${k.id}</td><td>${k.text}</td><td>${k.type === "Knockout" ? '<span class="pill b-no">Knockout</span>' : '<span class="pill">Preferred</span>'}</td><td>${k.w || "—"}</td><td class="soft">${k.why} · ${k.by}</td></tr>`).join("");
+}
+$("#crit-add").onclick = () => {
+  const t = $("#crit-in").value.trim(); if (!t) return;
+  const hit = BANNED.find(([re]) => re.test(t));
+  if (hit) { $("#crit-lint").innerHTML = `<span class="bad">✖ Blocked:</span> ${hit[1]}`; receipt({ actor: "ta-admin:r.iyer", action: `criterion proposal BLOCKED by lint: “${t}”`, requisition: "*" }); return; }
+  const id = ($("#crit-type").value === "Knockout" ? "K" : "P") + (CRITERIA.length + 1);
+  $("#crit-lint").innerHTML = `<span class="ok">✔ Passed lint.</span> Sent for approval with a job-related rationale (TA Lead + Ops). ${$("#crit-type").value === "Knockout" ? "<b>Knockouts</b> must also be shown to candidates <i>before</i> they apply and pass a backtest impact check." : "It becomes active in the next criteria version (v4) after a backtest re-run."}`;
+  receipt({ actor: "ta-admin:r.iyer", action: `criterion proposed: ${id} “${t}” (pending approval)`, requisition: "*" });
+};
+
+// ---------------- auditor ----------------
+function renderAud() {
+  const f = $("#aud-filter").value;
+  const list = RECEIPTS.filter(r => f === "all" ? true : f === "agent" ? r.actor === "agent" : r.actor !== "agent");
+  const t = $("#aud-table"); t.innerHTML = "<tr><th>Receipt</th><th>Time (UTC)</th><th>Candidate</th><th>Actor</th><th>Action</th></tr>";
+  list.forEach(r => { const tr = el("tr", { className: "click" }, `<td class="mono">${r.receipt_id}</td><td class="soft">${r.at.slice(5, 16)}</td><td>${r.candidate || "—"} ${r.country ? `<span class="soft">${r.country}</span>` : ""}</td><td>${r.actor}</td><td>${r.action}</td>`); tr.onclick = () => { document.querySelectorAll("#aud-table tr").forEach(x => x.classList.remove("sel")); tr.classList.add("sel"); $("#aud-json").textContent = JSON.stringify(r, null, 2); }; t.appendChild(tr); });
+  const AIR = [["Screener → Advance", [["Women", 0.91], ["Men", 1.0]], [["Age 40+", 0.88], ["Under 40", 1.0]]], ["Knockout close", [["Women", 0.97], ["Men", 1.0]], [["Age 40+", 0.86], ["Under 40", 1.0]]], ["Review → Interview", [["Women", 1.0], ["Men", 0.95]], [["Age 40+", 0.93], ["Under 40", 1.0]]]];
+  $("#air").innerHTML = AIR.map(([stage, ...gs]) => `<h3>${stage}</h3>` + gs.flat().filter(g => g[1] < 1).map(([g, v]) => `<div class="row" style="gap:8px;align-items:center;margin:3px 0"><span style="width:80px" class="soft">${g}</span><div class="bartrack grow" style="min-width:160px"><div class="bar" style="width:${v * 100}%;${v < 0.8 ? "" : ""}"></div><div class="thr" style="left:80%"></div></div><b style="width:40px" class="${v >= 0.8 ? "ok" : "bad"}">${v.toFixed(2)}</b></div>`).join("")).join("") + `<p class="soft">Black line = 0.80 threshold. Group shown is the one with the lower rate in each pair.</p>`;
+  $("#bt").innerHTML = `<p class="muted" style="margin-top:0">Replay of 12 months of applications (synthetic numbers). Each hire is placed in the band the agent <i>would</i> have assigned.</p>
+   <table><tr><th>Band the agent would assign</th><th>All hires</th><th>Top-rated hires</th></tr>
+   <tr><td>${bandPill("Advance")}</td><td>71.2%</td><td>78.0%</td></tr>
+   <tr><td>${bandPill("Review")}</td><td>25.7%</td><td>20.6%</td></tr>
+   <tr><td>${bandPill("Not matched")} (would be lost)</td><td class="ok">3.1%</td><td class="ok">1.4%</td></tr>
+   <tr><td><b>Recall outside Not matched</b></td><td class="ok">96.9% ✔ ≥95%</td><td class="ok">98.6% ✔ ≥98%</td></tr></table>
+   <div class="callout">🔎 <b>The hiring manager’s hire (Ravi K. profile).</b> A CV-to-JD ranker placed him in the <b>bottom 30%</b>, which the competitor’s mode would auto-reject. The structured screener places him in <b>Review</b> (score 65) because delivery work counts as physical experience (P2). The 25.7% of hires in Review is why a person owns that band.</div>`;
+}
+$("#aud-filter").onchange = renderAud;
+$("#export").onclick = () => { const b = new Blob([JSON.stringify(RECEIPTS, null, 2)], { type: "application/json" }); const a = el("a", { href: URL.createObjectURL(b), download: "decision-receipts.json" }); a.click(); };
+
+startChat();
+</script>
+</body>
+</html>

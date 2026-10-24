@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AI trail: Darwinbox PM take-home</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("scoutTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef; --cp-bg-elevated: #fcfbf8; --cp-surface: #ffffff; --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede; --cp-border-strong: #919191; --cp-text: #242424; --cp-text-muted: #5c5c5c; --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b; --cp-accent-hover: #9a1a41; --cp-accent-soft: rgba(177, 31, 75, 0.08); --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a; --cp-danger: #dc2626; --cp-warning: #f59e0b; --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12); --cp-overlay: rgba(255, 255, 255, 0.8); --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96); --cp-sheen: rgba(255, 255, 255, 0.55); --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a; --cp-bg-elevated: #343231; --cp-surface: #292929; --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747; --cp-border-strong: #5f5f5f; --cp-text: #dedede; --cp-text-muted: #919191; --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1; --cp-accent-hover: #fb7b91; --cp-accent-soft: rgba(253, 142, 161, 0.14); --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80; --cp-danger: #f87171; --cp-warning: #fbbf24; --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32); --cp-overlay: rgba(41, 41, 41, 0.88); --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96); --cp-sheen: rgba(255, 255, 255, 0.04); --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font: 15px/1.55 "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+main { max-width: 900px; margin: 0 auto; padding: 28px 24px 48px; }
+h1 { font-size: 24px; margin: 0 0 4px; } h1 span { color: var(--cp-accent); }
+h2 { font-size: 17px; margin: 26px 0 8px; color: var(--cp-accent); }
+a { color: var(--cp-link); }
+.muted { color: var(--cp-text-muted); }
+.card { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14); padding: 14px 18px; margin: 10px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--cp-border); vertical-align: top; }
+th { color: var(--cp-text-muted); font-size: 13px; }
+code { font-family: Consolas, "Courier New", Courier, monospace; background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 6px; padding: 0 4px; font-size: 13px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 0 8px; border-radius: 999px; border: 1px solid var(--cp-border-strong); color: var(--cp-text-muted); }
+.ok { color: var(--cp-success); font-weight: 600; } .warn { color: var(--cp-warning); font-weight: 600; } .bad { color: var(--cp-danger); font-weight: 600; }
+blockquote { margin: 8px 0; padding: 8px 14px; border-left: 3px solid var(--cp-accent); background: var(--cp-accent-soft); border-radius: 0 10px 10px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>AI trail: <span>Darwinbox PM take-home</span></h1>
+<p class="muted">How AI was used to produce D1 (decision brief), D2 (build sheet) and D3 (prototype), what was checked, and what was rejected or hedged. <a href="index.html">← Back to the prototype</a></p>
+
+<div class="card">
+<b>In three lines.</b> I worked in GitHub Copilot CLI, an agentic terminal assistant running Claude Opus 5.5. It read the case, ran web searches to check that the regulation I cited was current, drafted D1/D2 as HTML and rendered them to PDF, and built and browser-tested this prototype.
+I used AI for speed, for breadth on the legal landscape and for code. The things a reviewer should hold me to are the framing, the recommendation, the numbers I assumed and the product boundaries.
+Legal search results were treated as leads to verify, not as facts. That is why D1 §5 is written as “what I’d verify, and with whom”.
+</div>
+
+<h2>Tools</h2>
+<table>
+<tr><th>Tool</th><th>Used for</th></tr>
+<tr><td>GitHub Copilot CLI (Claude Opus 5.5)</td><td>Reading the case, structuring the argument, drafting D1/D2, writing the prototype code, running the checks below</td></tr>
+<tr><td>Web search (inside Copilot CLI)</td><td>Checking the current status of regulation as of Oct 2026: EU AI Act timing, US state AI-in-hiring laws, India DPDP Rules</td></tr>
+<tr><td>Headless Chrome</td><td>Rendering D1/D2 HTML to A4 PDF, then checking page count (≤2) and layout visually</td></tr>
+<tr><td>Playwright (system Chrome)</td><td>An automated click-through test of every prototype route</td></tr>
+</table>
+
+<h2>Workflow, step by step</h2>
+<table>
+<tr><th style="width:4%">#</th><th style="width:30%">Step</th><th>What AI did · what I checked or decided</th></tr>
+<tr><td>1</td><td>Brief</td><td>I gave the agent the recruiter’s email and the case PDF, and asked it to work out D1, D2 and D3 independently. It extracted the PDF text and listed the constraints: 2-page limits, a login-free D3, assumptions stated in one line each.</td></tr>
+<tr><td>2</td><td>Context</td><td>It pulled in my own interview prep notes on Darwinbox’s published AI direction: Cortex, with <i>governed agents</i> and <i>decision receipts</i>. That is why the audit story is built around per-decision receipts.</td></tr>
+<tr><td>3</td><td>Regulation currency check</td><td>It ran three web searches: the EU AI Act Digital Omnibus timing, US state laws (NYC LL 144, Illinois, Colorado, California) and India’s DPDP Rules phasing.
+<br><span class="warn">Hedged:</span> the reported move of the Annex III high-risk deadline to Dec 2027 is written as “reported”, and the recommendation is to build to the high-risk standard regardless.
+<br><span class="bad">Rejected:</span> one result gave a wrong bill number for the Colorado AI Act, so no bill numbers or effective dates are cited for US states. They appear as items to verify with US counsel.</td></tr>
+<tr><td>4</td><td>Framing</td><td>The agent and I worked through the core reframe: the customer is losing candidates to a slow “yes”, not a slow “no”. From there came the three options, the recruiter-hours model (assumptions stated in D1/D2) and the gates that govern autonomy.</td></tr>
+<tr><td>5</td><td>D1 and D2</td><td>The agent drafted print-styled HTML, rendered it to PDF, checked page count and inspected page images. It fixed a table split across a page break and used the spare space for a “what we tell the head of TA” paragraph.</td></tr>
+<tr><td>6</td><td>D3 prototype</td><td>A single-file HTML app with no backend and synthetic data. An automated test ran all routes: Advance and booking; Review from an unclear knockout; India knockout auto-close followed by a human review request; Germany knockout routed to human confirmation; the recruiter decision requiring a reason code; a policy change blocked for Germany; a denied unlock request; criteria lint blocking proxies (age, postcode) and accepting a valid criterion; receipts export. Result: <span class="ok">0 JavaScript errors</span>.</td></tr>
+</table>
+
+<h2>Calls I am accountable for (not delegated to AI)</h2>
+<ul>
+<li>Not shipping model-score auto-rejection, while still matching the competitor on speed. Autonomy is <b>earned per country</b> through gates.</li>
+<li>Germany: no automated adverse outcome until counsel and the works council agree. Starting the works council in week 1, because it is the critical path.</li>
+<li>Screening frontline roles with a structured mobile screener instead of CV-to-JD ranking. This is my hypothesis for why the hiring manager’s best hire would have been missed, and the backtest is designed to test it.</li>
+<li>The LLM extracts evidence, but a deterministic scorer assigns the band. That makes outcomes reproducible and explainable to an auditor.</li>
+<li>All numbers marked “assume” are mine and are labelled as such. They should be replaced by the customer’s data in week 3.</li>
+</ul>
+
+<h2>Limits of this AI-assisted work</h2>
+<ul>
+<li>Legal points are hypotheses, not advice. The searches surfaced inconsistent details, which is exactly why each one has a named owner to verify it with.</li>
+<li>The prototype’s backtest and fairness figures are illustrative. They show the <i>shape</i> of the evidence an auditor would get, not a result.</li>
+<li>No customer or candidate data was used. The prototype collects nothing and sends nothing anywhere.</li>
+</ul>
+</main>
+</body>
+</html>
